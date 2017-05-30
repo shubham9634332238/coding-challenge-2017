@@ -18,25 +18,33 @@ final class MyJSON implements JSON {
 
   @Override
   public JSON getObject(String name) {
-    // TODO: implement this
+    if(object.containsKey(name)) {
+			Object o = object.get(name);
+			if(o instanceof JSON) 
+        return (JSON) o;
+			else if(o instanceof HashMap) 
+        return new JSON((HashMap<String, Object>) o);
+		}
     return null;
   }
 
   @Override
   public JSON setObject(String name, JSON value) {
-    // TODO: implement this
+    object.put(name, value);
     return this;
   }
 
   @Override
   public String getString(String name) {
-    // TODO: implement this
+    if(object.containsKey(name)) {
+			return object.get(name).toString();
+		}
     return null;
   }
 
   @Override
   public JSON setString(String name, String value) {
-    // TODO: implement this
+    object.put(name, value);
     return this;
   }
 

@@ -16,309 +16,67 @@ import java.io.IOException;
 import java.util.regex.*;
 
 final class MyJSONParser implements JSONParser {
-  private String input;
-	private int index;
-
-  @Override
-  public JSON parse(String in) throws IOException {
-     input = in.trim();
-     index=1;
-    skipWhiteSpace();
-		if(input.charAt(0)=='{'){
-    	JSON data = parseRecursive();
-			if(index<input.length()){
-				if(Pattern.compile("\\S").matcher(input.substring(index)).find()){
-					throw new IOException("extra characters at end of input");
-				}
-				else{
-					return data;
-				}
-			}
-			else{
-				return data;
-			}
-
-		}
-		else{
-			throw new IOException("extra characters at beginning of input");
-		}
-    }
-    public JSON parseRecursive() throws IOException{
-	  MyJSON data = new MyJSON();
-	  skipWhiteSpace();
-	  int numEntries = 0;
-	    while(input.charAt(index)!='}'){
-
-	    	skipWhiteSpace();
-
-	    	if(numEntries>0){
-	    		if(input.charAt(index)!=','){
-	    			throw new IOException("no comma in between key:value pair at index " + index);
-	    		}
-	    		else{
-	    			index++;
-	    		}
-	    	}
-
-	    	skipWhiteSpace();
-
-	    	String key = getString();
-	    //	System.out.println("key: " + key);
-
-	    	skipWhiteSpace();
-
-	    	if(input.charAt(index)!=':'){
-	    		//System.out.println(input.substring(index));
-	    		throw new IOException("no colon in between key and value at index " + index);
-	    	}
-	    	else{
-	    		index++;
-	    	}
-
-	    	skipWhiteSpace();
-
-				//this is the starting character of the value section of key:value
-				//it lets the program know how to handle the value
-	    	char beginningValue = input.charAt(index);
-
-	        if(beginningValue=='"'){
-	        	String value = getString();
-	        	//System.out.println("string value: " + value);
-	        	numEntries++;
-
-						//checking for duplicate keys
-						if(data.strings.containsKey(key) || data.objects.containsKey(key)){
-							throw new IOException("duplicate key at index " + index);
-						}
-						else{
-							//I know I can use the setString() method I defined in MyJSON.java, but I like this because it's more explicit
-	        	data.strings.put(key,value);
-						}
-	        }
-
-	        else if(beginningValue=='{'){
-	        	index++;
-	        //	System.out.println(input.substring(index));
-	        	numEntries++;
-						if(data.strings.containsKey(key) || data.objects.containsKey(key)){
-							throw new IOException("duplicate key at index " + index);
-						}
-						else{
-	        	data.objects.put(key, parseRecursive());
-					  }
-	        }
-
-	        skipWhiteSpace();
-
-	      //  System.out.println("index: " + index);
-	      }
-
-				index++;
-
-	    //System.out.println(data.strings);
-	    //System.out.println(data.objects);
-
-	    return data;
-
-  }
-
-
-	//obviously this is used to skip whitespace in the input
-  public void skipWhiteSpace(){
-	 char next = input.charAt(index);
-	 while(Character.isWhitespace(next)){
-		 next = input.charAt(++index);
-	 }
-
-  }
-
-
-//this is used to get a string when required
-//it also checks for string validity. Correctly escaped characters, etc.
-  public String getString() throws IOException{
-	  int startIndex = index+1;
-	  String str="";
-	  if(input.charAt(index)=='"'){
-  	while(true){
-  		index++;
-  		if(input.charAt(index)=='\\'){
-  			char afterSlash = input.charAt(index+1);
-  			if(afterSlash=='\\' || afterSlash=='"' || afterSlash=='n' || afterSlash=='t'){
-  				index++;
-  			}
-  			else{
-  				throw new IOException("invalid escaped character in string at index " + index);
-  			}
-  		}
-  		else if(input.charAt(index)=='"'){
-  			str = input.substring(startIndex,index);
-  			break;
-  			}
-  		}
-	  }
-  else {
-	 // System.out.println(input.substring(index));
-	  throw new IOException("invalid input. please try again. index " + index);
-	  }
-  	index++;
-  	return str;
-  }
-
-}import java.io.IOException;
-import java.util.regex.*;
-final class MyJSONParser implements JSONParser {
-	private String input;
-	private int index;
   @Override
   public JSON parse(String in) throws IOException {
     // TODO: implement this
-    input = in.trim();
+      
+	  
+	  //create the myJSON object
+	MyJSON json = new MyJSON();
+	  
+	//Split the string into an array for easier anaylsis 
+	String[] s = in.split("\"");
 	
-    index=1;
-   
-		skipWhiteSpace();
-		if(input.charAt(0)=='{'){
-    	JSON data = parseRecursive();
-			if(index<input.length()){
-				if(Pattern.compile("\\S").matcher(input.substring(index)).find()){
-					throw new IOException("extra characters at end of input");
+	//Loop thorugh the array
+	for(int i = 0 ;i< s.length; i++){
+		
+		//First Condition checks if the s[i] is an object
+		if(s[i].contains("{") && i != 0){
+			int n = i+1;
+			
+			//Set the beginning of the JSON String to a "}"
+			String jsonString = "{";
+			
+			//Perform while loop to concatenate a string to parse
+			while(!s[n].contains("}")){
+				
+				//Don't add quotes to the ":"
+				if(!s[n].contains(":")){
+					
+					//Don't add quotes to the ","
+					if(!s[n].contains(",")){	
+						
+						//Concatenate the s[n] value to the string
+						jsonString += "\"" + s[n] + "\"";
+					}else{
+						//if s[n] does contain a "," just add "," without quotes 
+						jsonString += s[n];
+					}
+				}else{
+					//if s[n] does contain a ":" just add ":" without quotes 
+					jsonString += s[n];
 				}
-				else{
-					return data;
-				}
+				//Increase n by 1
+				n++;
 			}
-			else{
-				return data;
-			}
-
+			
+			//Set the of the JSON string to a "}"
+			jsonString += "}";
+			
+			//Set an object in the json to the parsed JSONString
+			json.setObject(s[i-1], parse(jsonString));
+		}else if(i+1 < s.length && s[i+1].contains(":") && !s[i+1].contains("{")){
+		    //Set a string if the conditions are met
+			//Array won't go out of bounds, is before the ":" and doesn't contain a "{".
+			
+			//Set JSONObject string s[i] = key, s[i+2] = value
+			json.setString(s[i], s[i+2]);
 		}
-		else{
-			throw new IOException("extra characters at beginning of input");
-		}
-    }
-
-
-//This method does all of the real work
-//It's a little sketchy, but it seems to work fine
-  public JSON parseRecursive() throws IOException{
-	  MyJSON data = new MyJSON();
-	  skipWhiteSpace();
-	  int numEntries = 0;
-	    while(input.charAt(index)!='}'){
-
-	    	skipWhiteSpace();
-
-	    	if(numEntries>0){
-	    		if(input.charAt(index)!=','){
-	    			throw new IOException("no comma in between key:value pair at index " + index);
-	    		}
-	    		else{
-	    			index++;
-	    		}
-	    	}
-
-	    	skipWhiteSpace();
-
-	    	String key = getString();
-	    //	System.out.println("key: " + key);
-
-	    	skipWhiteSpace();
-
-	    	if(input.charAt(index)!=':'){
-	    		//System.out.println(input.substring(index));
-	    		throw new IOException("no colon in between key and value at index " + index);
-	    	}
-	    	else{
-	    		index++;
-	    	}
-
-	    	skipWhiteSpace();
-
-				//this is the starting character of the value section of key:value
-				//it lets the program know how to handle the value
-	    	char beginningValue = input.charAt(index);
-
-	        if(beginningValue=='"'){
-	        	String value = getString();
-	        	//System.out.println("string value: " + value);
-	        	numEntries++;
-
-						//checking for duplicate keys
-						if(data.strings.containsKey(key) || data.objects.containsKey(key)){
-							throw new IOException("duplicate key at index " + index);
-						}
-						else{
-							//I know I can use the setString() method I defined in MyJSON.java, but I like this because it's more explicit
-	        	data.strings.put(key,value);
-						}
-	        }
-
-	        else if(beginningValue=='{'){
-	        	index++;
-	        //	System.out.println(input.substring(index));
-	        	numEntries++;
-						if(data.strings.containsKey(key) || data.objects.containsKey(key)){
-							throw new IOException("duplicate key at index " + index);
-						}
-						else{
-	        	data.objects.put(key, parseRecursive());
-					  }
-	        }
-
-	        skipWhiteSpace();
-
-	      //  System.out.println("index: " + index);
-	      }
-
-				index++;
-
-	    //System.out.println(data.strings);
-	    //System.out.println(data.objects);
-
-	    return data;
-
+	}
+	
+	
+	
+	//Return the new json object
+    return json;
   }
-
-
-	//obviously this is used to skip whitespace in the input
-  public void skipWhiteSpace(){
-	 char next = input.charAt(index);
-	 while(Character.isWhitespace(next)){
-		 next = input.charAt(++index);
-	 }
-
-  }
-
-
-//this is used to get a string when required
-//it also checks for string validity. Correctly escaped characters, etc.
-  public String getString() throws IOException{
-	  int startIndex = index+1;
-	  String str="";
-	  if(input.charAt(index)=='"'){
-  	while(true){
-  		index++;
-  		if(input.charAt(index)=='\\'){
-  			char afterSlash = input.charAt(index+1);
-  			if(afterSlash=='\\' || afterSlash=='"' || afterSlash=='n' || afterSlash=='t'){
-  				index++;
-  			}
-  			else{
-  				throw new IOException("invalid escaped character in string at index " + index);
-  			}
-  		}
-  		else if(input.charAt(index)=='"'){
-  			str = input.substring(startIndex,index);
-  			break;
-  			}
-  		}
-	  }
-  else {
-	 // System.out.println(input.substring(index));
-	  throw new IOException("invalid input. please try again. index " + index);
-	  }
-  	index++;
-  	return str;
-  }
-
 }

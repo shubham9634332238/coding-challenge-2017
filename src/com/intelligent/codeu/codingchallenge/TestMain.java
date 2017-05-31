@@ -14,12 +14,16 @@ package com.intelligent.codeu.codingchallenge;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.io.*;
 
 final class TestMain {
 
   public static void main(String[] args) {
 
     final Tester tests = new Tester();
+
 
     tests.add("Empty Object", new Test() {
       @Override
@@ -63,6 +67,7 @@ final class TestMain {
         Asserts.isEqual("doe", nameObj.getString("last"));
       }
     });
+
     tests.add("Value with extra colons to test", new Test() {
         @Override
         public void run(JSONFactory factory) throws Exception {

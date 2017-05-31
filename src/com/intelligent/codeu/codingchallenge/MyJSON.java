@@ -13,48 +13,48 @@
 package com.intelligent.codeu.codingchallenge;
 
 import java.util.Collection;
+import java.util.HashMap;
 
 final class MyJSON implements JSON {
+	HashMap<String,JSON> objects = new HashMap<String,JSON>();
+	HashMap<String,String> strings = new HashMap<String,String>();
 
   @Override
   public JSON getObject(String name) {
-    if(object.containsKey(name)) {
-			Object o = object.get(name);
-			if(o instanceof JSON) 
-        return (JSON) o;
-			else if(o instanceof HashMap) 
-        return new JSON((HashMap<String, Object>) o);
-		}
+    if(objects.containsKey(name)){
+		return objects.get(name);
+	}
     return null;
   }
 
   @Override
   public JSON setObject(String name, JSON value) {
-    object.put(name, value);
-    return this;
+      objects.put(name,value);
+       return this;
   }
 
   @Override
   public String getString(String name) {
-    if(object.containsKey(name)) {
-			return object.get(name).toString();
+   if(strings.containsKey(name)){
+			return strings.get(name);
 		}
     return null;
   }
 
   @Override
   public JSON setString(String name, String value) {
-    object.put(name, value);
+   strings.put(name,value);
     return this;
   }
 
   @Override
   public void getObjects(Collection<String> names) {
-    // TODO: implement this
+	  names.addAll(objects.keySet());
+  
   }
 
   @Override
   public void getStrings(Collection<String> names) {
-    // TODO: implement this
+     names.addAll(strings.keySet());
   }
 }
